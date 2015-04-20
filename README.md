@@ -53,6 +53,29 @@ gulp.task('bootlint', function() {
 
 ```
 
+### options.logLevel
+
+* Type: `String`
+* Default: `INFO`
+* Options: `DEBUG`, `INFO`, `ERROR`, `NONE`
+
+String to customize logging level.
+
+#### Example:
+
+```javascript
+var gulp = require('gulp');
+var bootlint  = require('gulp-bootlint');
+
+gulp.task('bootlint', function() {
+    return gulp.src('./index.html')
+        .pipe(bootlint({
+            logLevel: 'ERROR'
+        }));
+});
+
+```
+
 ## Release History
 
 * 2015-02-24 - v0.3.0: Updated Bootlint to v0.11.0 / Bumped other dependency versions
