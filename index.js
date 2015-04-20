@@ -16,10 +16,24 @@ var bootlint = require('bootlint');
 // consts
 var PLUGIN_NAME = 'gulp-bootlint';
 
+var logLevel = {
+    DEBUG : 1,
+    INFO : 2,
+    ERROR : 3,
+    NONE : 4
+};
+
 function gulpBootlint(options) {
     options = options || {
-        disabledIds: []
+        disabledIds: [],
+        logLevel : 'INFO'
     };
+
+    if (options.logLevel){
+        options.logLevel = options.logLevel.toUpperCase();
+    }
+    options.logLevel = logLevel[options.logLevel] || logLevel.INFO;
+
     var hasError = false;
 
     // creating a stream through which each file will pass
@@ -42,12 +56,12 @@ function gulpBootlint(options) {
             if (lint.elements) {
                 lint.elements.each(function (_, element) {
                     var errorLocation = element.startLocation;
-                    gutil.log(file.path + ":" + (errorLocation.line + 1) + ":" + (errorLocation.column + 1), lintId, lint.message);
+                    log.error(file.path + ":" + (errorLocation.line + 1) + ":" + (errorLocation.column + 1), lintId, lint.message);
                     errorElementsAvailable = true;
                 });
             }
             if (!errorElementsAvailable) {
-                gutil.log(file.path + ":", lintId, lint.message);
+                log.error(file.path + ":", lintId, lint.message);
             }
 
             ++errorCount;
@@ -56,14 +70,14 @@ function gulpBootlint(options) {
             file.bootlint.issues.push(lint);
         };
 
-        gutil.log(chalk.gray('Linting file ' + file.path));
+        log.debug(chalk.gray('Linting file ' + file.path));
         file.bootlint = { success: true, issues: [] };
         bootlint.lintHtml(file.contents.toString(), reporter, options.disabledIds);
 
         if(errorCount > 0) {
-            gutil.log(chalk.red(errorCount + ' lint error(s) found in file ' + file.path));
+            log.error(chalk.red(errorCount + ' lint error(s) found in file ' + file.path));
         } else {
-            gutil.log(chalk.green(file.path + ' is lint free!'));
+            log.info(chalk.green(file.path + ' is lint free!'));
         }
 
         return cb(null, file);
@@ -74,6 +88,27 @@ function gulpBootlint(options) {
 
         return cb();
     });
+
+    var log = {
+        log : function(){
+            gutil.log.apply(this, arguments);
+        },
+        debug : function(){
+            if (options.logLevel <= logLevel.DEBUG){
+                this.log.apply(this, arguments);
+            }
+        },
+        info : function(){
+            if (options.logLevel <= logLevel.INFO){
+                this.log.apply(this, arguments);
+            }
+        },
+        error : function(){
+            if (options.logLevel <= logLevel.ERROR){
+                this.log.apply(this, arguments);
+            }
+        }
+    };
 
     return stream;
 };
